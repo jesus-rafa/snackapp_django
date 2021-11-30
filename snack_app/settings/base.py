@@ -77,7 +77,12 @@ MIDDLEWARE = [
 
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:8080',
-    'http://127.0.0.1:8000'
+    'http://127.0.0.1:8000',
+    'https://goevents.tech',
+    'https://157.245.143.185:8080',
+    'http://157.245.143.185:8080',
+    'https://157.245.143.185:8000',
+    'http://157.245.143.185:8000',
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
