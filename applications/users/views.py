@@ -222,11 +222,11 @@ class Invitations(CreateAPIView):
         event_instance.save()
 
 	# agregar logo en el email
-        path = settings.MEDIA_ROOT + '/assets/logo3.jpg'
-        logo_data = open(path, 'rb')
-        logo = MIMEImage(logo_data.read())
-        logo_data.close()
-        logo.add_header('Content-ID', '<logo>')
+        #path = settings.MEDIA_ROOT + '/assets/logo3.jpg'
+        #logo_data = open(path, 'rb')
+        #logo = MIMEImage(logo_data.read())
+        #logo_data.close()
+        #logo.add_header('Content-ID', '<logo>')
 
         # cargar adjuntos en el email
         if event[0].image:
@@ -272,7 +272,7 @@ class Invitations(CreateAPIView):
                 if event[0].image:
                     msg2.mixed_subtype = 'related'
                     msg2.attach(img)
-                msg2.attach(logo)
+                #msg2.attach(logo)
                 msg2.send()
 
         # Envio de correos para usuarios ya registrados
@@ -292,7 +292,7 @@ class Invitations(CreateAPIView):
         if event[0].image:
             msg.mixed_subtype = 'related'
             msg.attach(img)
-        msg.attach(logo)
+        #msg.attach(logo)
         msg.send()
 
         response = {
@@ -310,7 +310,7 @@ class ListUsers(ListAPIView):
 
     def get_queryset(self):
 
-        return User.objects.filter(is_superuser=False)
+        return User.objects.all()
 
 
 class List_Tribes(ListAPIView):
