@@ -6,6 +6,7 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.core.mail import (EmailMessage, EmailMultiAlternatives, send_mail,
                               send_mass_mail)
 from django.db import models
+from model_utils.models import TimeStampedModel
 from django.dispatch import receiver
 from django.template.loader import get_template, render_to_string
 from django.urls import reverse
@@ -104,6 +105,29 @@ class Membership(models.Model):
         verbose_name_plural = 'Miembros'
         ordering = ['id']
         unique_together = ('group', 'user',)
+
+
+class Enviar_Correos(TimeStampedModel):
+    correo = models.EmailField('Correo', max_length=200, blank=True)
+    nombre = models.CharField('Nombre', max_length=200, blank=True)
+    password = models.CharField('Nombre', max_length=50, blank=True)
+    tipo = models.CharField('Tipo', max_length=200, blank=True)
+    is_sent = models.BooleanField(default=False)
+    id_evento = models.CharField('id evento', max_length=10, blank=True)
+    comentarios = models.CharField(
+        'Comentarios',
+        max_length=800,
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        verbose_name = 'Enviar_Correos'
+        verbose_name_plural = 'Enviar_Correos'
+        ordering = ['correo']
+
+    def __str__(self):
+        return self.correo
 
 
 @ receiver(reset_password_token_created)

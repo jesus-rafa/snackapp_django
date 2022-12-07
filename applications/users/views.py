@@ -4,7 +4,7 @@ import string
 from email.mime.image import MIMEImage
 
 from applications.events.models import Event
-from applications.users.models import Membership, Tribes, User
+from applications.users.models import Membership, Tribes, User, Enviar_Correos
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
@@ -132,33 +132,13 @@ class Delivered(CreateAPIView):
         idEvent = serializer.validated_data['idEvent']
         listEmails = serializer.validated_data['listEmails']
 
-        event = Event.objects.filter(id=idEvent)
-
-        # cargar adjuntos en el email
-        if event[0].image:
-            coupon_image = event[0].image
-            img_data = coupon_image.read()
-            img = MIMEImage(img_data)
-            img.add_header('Content-ID', '<coupon_image>')
-
-        # Envio de correos
-        subject = 'Llego tu pedido: ' + event[0].name
-        text_content = ''
-        html_content = render_to_string(
-            'users/email/delivered.html',
-            {'data': event}
-        )
-        msg = EmailMultiAlternatives(
-            subject,
-            text_content,
-            settings.EMAIL_HOST_USER,
-            listEmails
-        )
-        msg.attach_alternative(html_content, "text/html")
-        if event[0].image:
-            msg.mixed_subtype = 'related'
-            msg.attach(img)
-        msg.send()
+        # Guardar datos para envio de correos
+        for email in listEmails:
+            Enviar_Correos.objects.create(
+                tipo='DELIVERED',
+                id_evento=idEvent,
+                correo=email
+            )
 
         response = {
             'status': 'success',
@@ -177,21 +157,11 @@ class Thank(CreateAPIView):
         # Recuperar datos
         listEmails = serializer.validated_data['listEmails']
 
-        subject = 'Gracias por tu donacion'
-        text_content = ''
-        html_content = render_to_string(
-            'users/email/thank.html',
-            {'data': listEmails}
+        # Guardar datos para envio de correos
+        Enviar_Correos.objects.create(
+            tipo='THANK',
+            correo=email
         )
-        msg = EmailMultiAlternatives(
-            subject,
-            text_content,
-            settings.EMAIL_HOST_USER,
-            listEmails
-        )
-        msg.attach_alternative(html_content, "text/html")
-        msg.mixed_subtype = 'related'
-        msg.send()
 
         response = {
             'status': 'success',
@@ -215,25 +185,9 @@ class Invitations(CreateAPIView):
         listEmails = serializer.validated_data['listEmails']
         listRegisteredEmails = []
 
-        # Recuperar instancia del evento
-        event = Event.objects.filter(id=idEvent)
         event_instance = Event.objects.get(id=idEvent)
         event_instance.status = 'EN PROCESO'
         event_instance.save()
-
-	# agregar logo en el email
-        #path = settings.MEDIA_ROOT + '/assets/logo3.jpg'
-        #logo_data = open(path, 'rb')
-        #logo = MIMEImage(logo_data.read())
-        #logo_data.close()
-        #logo.add_header('Content-ID', '<logo>')
-
-        # cargar adjuntos en el email
-        if event[0].image:
-            coupon_image = event[0].image
-            img_data = coupon_image.read()
-            img = MIMEImage(img_data)
-            img.add_header('Content-ID', '<coupon_image>')
 
         for email in listEmails:
             if User.objects.filter(email=email).exists():
@@ -256,44 +210,20 @@ class Invitations(CreateAPIView):
                 )
 
                 # Envio de correos para usuarios nuevos
-                subject = 'Invitacion a un Evento: ' + event[0].name
-                text_content = ''
-                html_content = render_to_string(
-                    'users/email/invitation_new.html',
-                    {'data': event, 'email': email, 'password': password}
+                Enviar_Correos.objects.create(
+                    tipo='NEW',
+                    correo=email,
+                    password=password,
+                    id_evento=idEvent
                 )
-                msg2 = EmailMultiAlternatives(
-                    subject,
-                    text_content,
-                    settings.EMAIL_HOST_USER,
-                    [email]
-                )
-                msg2.attach_alternative(html_content, "text/html")
-                if event[0].image:
-                    msg2.mixed_subtype = 'related'
-                    msg2.attach(img)
-                #msg2.attach(logo)
-                msg2.send()
 
         # Envio de correos para usuarios ya registrados
-        subject = 'Invitacion a un Evento: ' + event[0].name
-        text_content = ''
-        html_content = render_to_string(
-            'users/email/invitations.html',
-            {'data': event}
-        )
-        msg = EmailMultiAlternatives(
-            subject,
-            text_content,
-            settings.EMAIL_HOST_USER,
-            listRegisteredEmails
-        )
-        msg.attach_alternative(html_content, "text/html")
-        if event[0].image:
-            msg.mixed_subtype = 'related'
-            msg.attach(img)
-        #msg.attach(logo)
-        msg.send()
+        for email in listRegisteredEmails:
+            Enviar_Correos.objects.create(
+                tipo='INVITATION',
+                correo=email,
+                id_evento=idEvent
+            )
 
         response = {
             'status': 'success',
@@ -549,19 +479,11 @@ class Contact(generics.GenericAPIView):
         message = serializer.validated_data['message']
 
         # Envio de correo
-        subject = 'Contacto: ' + contact
-        text_content = ''
-        html_content = render_to_string(
-            'users/email/contact.html',
-            {'contact': contact, 'email': email, 'message': message}
+        Enviar_Correos.objects.create(
+            tipo='CONTACT',
+            correo=email,
+            nombre=contact,
+            comentarios=message
         )
-        msg = EmailMultiAlternatives(
-            subject,
-            text_content,
-            settings.EMAIL_HOST_USER,
-            [settings.EMAIL_HOST_USER]
-        )
-        msg.attach_alternative(html_content, "text/html")
-        msg.send()
 
         return Response({'response': 'ok'})

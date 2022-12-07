@@ -3,12 +3,20 @@ import json
 from django.core.exceptions import ImproperlyConfigured
 from unipath import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Ejecutar crontab
+import os.path
+
 BASE_DIR = Path(__file__).ancestor(3)
 
-with open("secret.json") as f:
-    secret = json.loads(f.read())
+try:
+    with open("secret.json") as f:
+        secret = json.loads(f.read())
+except:
+    fdir = os.path.abspath(os.path.dirname(__file__))
+    full_path = os.path.join(fdir,'secret.json')
 
+    with open(full_path) as f:
+        secret = json.loads(f.read())
 
 def get_secret(secret_name, secrets=secret):
     try:
@@ -51,10 +59,15 @@ THIRD_PARTY_APPS = (
     'knox',
     'corsheaders',
     'mercadopago',
+    'django_crontab',
 )
 
 INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS + THIRD_PARTY_APPS
 
+# CRONTABS
+CRONJOBS = [
+    ('*/5 * * * *', 'applications.users.cron.generar_correos', '>> /webapps/env_snack_app/logs/crones.log')
+]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -76,13 +89,10 @@ MIDDLEWARE = [
 
 
 CORS_ORIGIN_WHITELIST = [
-    'http://localhost:8080',
-    'http://127.0.0.1:8000',
     'https://goevents.tech',
-    'https://157.245.143.185:8080',
-    'http://157.245.143.185:8080',
-    'https://157.245.143.185:8000',
-    'http://157.245.143.185:8000',
+    'http://goevents.tech',
+    'https://137.184.100.157',
+    'http://137.184.100.157',
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
